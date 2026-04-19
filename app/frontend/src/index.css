@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 30% 6%;
+    --foreground: 240 10% 95%;
+
+    --card: 240 30% 10%;
+    --card-foreground: 240 10% 95%;
+
+    --popover: 240 30% 10%;
+    --popover-foreground: 240 10% 95%;
+
+    --primary: 252 75% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 25% 15%;
+    --secondary-foreground: 240 10% 95%;
+
+    --muted: 240 25% 15%;
+    --muted-foreground: 240 15% 70%;
+
+    --accent: 190 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 252 30% 20%;
+    --input: 252 30% 20%;
+    --ring: 252 75% 60%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 30% 8%;
+    --sidebar-foreground: 240 10% 95%;
+    --sidebar-primary: 252 75% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 25% 15%;
+    --sidebar-accent-foreground: 240 10% 95%;
+    --sidebar-border: 252 30% 20%;
+    --sidebar-ring: 252 75% 60%;
+  }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 240 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 20% 10%;
+
+    --primary: 252 75% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 10% 94%;
+    --secondary-foreground: 240 20% 10%;
+
+    --muted: 240 10% 94%;
+    --muted-foreground: 240 10% 45%;
+
+    --accent: 190 100% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 88%;
+    --input: 240 10% 88%;
+    --ring: 252 75% 55%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 20% 10%;
+    --sidebar-primary: 252 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 94%;
+    --sidebar-accent-foreground: 240 20% 10%;
+    --sidebar-border: 240 10% 88%;
+    --sidebar-ring: 252 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    direction: rtl;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+  }
+}
+
+/* Neon glow effects */
+.neon-glow {
+  box-shadow: 0 0 15px rgba(108, 92, 231, 0.3), 0 0 30px rgba(108, 92, 231, 0.1);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.3), 0 0 30px rgba(0, 210, 255, 0.1);
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(108, 92, 231, 0.5), 0 0 20px rgba(108, 92, 231, 0.3);
+}
+
+.neon-text-cyan {
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.5), 0 0 20px rgba(0, 210, 255, 0.3);
+}
+
+/* Glass morphism card */
+.glass-card {
+  background: rgba(18, 18, 42, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(108, 92, 231, 0.15);
+}
+
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(108, 92, 231, 0.15);
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(135deg, #6C5CE7, #00D2FF);
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #7B6CF0, #20DCFF);
+  box-shadow: 0 0 20px rgba(108, 92, 231, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Animated background grid */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(108, 92, 231, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 92, 231, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(108, 92, 231, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(108, 92, 231, 0.6); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Shimmer loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(108, 92, 231, 0.1) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Progress bar animation */
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+.animate-progress {
+  animation: progress-fill 0.5s ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
