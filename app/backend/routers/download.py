@@ -1,8 +1,7 @@
 import logging
-from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.download_service import fetch_video_info
+from services.download_service import fetch_video_info, fetch_audio_url
 from services.aihub import AIHubService
 from schemas.aihub import TranscribeAudioRequest
 
@@ -23,7 +22,7 @@ class TranscribeRequest(BaseModel):
 
 @router.post("/fetch")
 async def fetch_download(request: DownloadRequest):
-    """Fetch video info and download link from cobalt API"""
+    """Fetch video info and download link using yt-dlp"""
     try:
         result = await fetch_video_info(
             url=request.url,
@@ -44,12 +43,8 @@ async def fetch_download(request: DownloadRequest):
 async def transcribe_video(request: TranscribeRequest):
     """Download audio from video URL and transcribe it using AI"""
     try:
-        # Step 1: Get audio download link from cobalt
-        audio_result = await fetch_video_info(
-            url=request.url,
-            quality="720",
-            audio_only=True,
-        )
+        # Step 1: Get audio download URL using yt-dlp
+        audio_result = await fetch_audio_url(url=request.url)
 
         if not audio_result.get("success"):
             return {
@@ -60,12 +55,6 @@ async def transcribe_video(request: TranscribeRequest):
 
         audio_data = audio_result.get("data", {})
         audio_url = audio_data.get("url")
-
-        if not audio_url:
-            # Try picker if direct URL not available
-            picker = audio_data.get("picker", [])
-            if picker and len(picker) > 0:
-                audio_url = picker[0].get("url")
 
         if not audio_url:
             return {

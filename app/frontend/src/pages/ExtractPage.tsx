@@ -4,21 +4,37 @@ import { client } from '@/lib/api';
 import {
   Scissors, Link2, Music, Video, FileText, Globe2,
   Loader2, AlertCircle, CheckCircle2, ExternalLink, Clipboard, X,
-  Copy, Check, Subtitles
+  Copy, Check, Subtitles, Eye, User, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 type ExtractionMode = 'audio' | 'video' | 'metadata' | 'transcribe';
 
+interface PickerItem {
+  url: string;
+  thumb?: string;
+  type?: string;
+  resolution?: string;
+  ext?: string;
+  filesize?: number | null;
+  tbr?: number | null;
+}
+
 interface ExtractionResult {
-  status: string;
+  status?: string;
   url?: string;
   filename?: string;
-  picker?: Array<{
-    url: string;
-    thumb?: string;
-    type?: string;
-  }>;
+  title?: string;
+  thumbnail?: string;
+  duration?: number;
+  uploader?: string;
+  view_count?: number;
+  like_count?: number;
+  description?: string;
+  extractor?: string;
+  webpage_url?: string;
+  audio_only?: boolean;
+  picker?: PickerItem[];
 }
 
 interface TranscriptionResult {
@@ -31,6 +47,22 @@ const extractionModes: { id: ExtractionMode; label: string; icon: typeof Music; 
   { id: 'transcribe', label: 'تفريغ نصي', icon: Subtitles, desc: 'حوّل الصوت لنص مكتوب تلقائياً' },
   { id: 'metadata', label: 'البيانات الوصفية', icon: FileText, desc: 'اسحب معلومات الفيديو (العنوان، الوصف، التاقز)' },
 ];
+
+function formatDuration(seconds: number | undefined): string {
+  if (!seconds) return '';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function formatNumber(num: number | undefined): string {
+  if (!num) return '';
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return num.toString();
+}
 
 export default function ExtractPage() {
   const [url, setUrl] = useState('');
@@ -76,12 +108,28 @@ export default function ExtractPage() {
 
     try {
       if (mode === 'metadata') {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        toast.success('تم استخراج البيانات الوصفية!');
-        setResult({
-          status: 'metadata',
-          url: url,
+        // Use yt-dlp to fetch video info
+        const response = await client.apiCall.invoke({
+          url: '/api/v1/download/fetch',
+          method: 'POST',
+          data: {
+            url: url.trim(),
+            quality: '720',
+            audio_only: false,
+          },
+          options: {
+            timeout: 120_000,
+          },
         });
+
+        const data = response.data;
+
+        if (data.success && data.data) {
+          setResult({ ...data.data, status: 'metadata' });
+          toast.success('تم استخراج البيانات الوصفية!');
+        } else {
+          setError(data.error || 'صار خطأ، حاول مرة ثانية');
+        }
       } else if (mode === 'transcribe') {
         const response = await client.apiCall.invoke({
           url: '/api/v1/download/transcribe',
@@ -110,6 +158,9 @@ export default function ExtractPage() {
             url: url.trim(),
             quality: '1080',
             audio_only: mode === 'audio',
+          },
+          options: {
+            timeout: 120_000,
           },
         });
 
@@ -269,60 +320,160 @@ export default function ExtractPage() {
             </div>
           )}
 
-          {/* Download Result */}
-          {result && mode !== 'transcribe' && (
+          {/* Metadata Result */}
+          {result && mode === 'metadata' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-green-400">
                 <CheckCircle2 className="w-5 h-5" />
-                <span className="font-medium">
-                  {result.status === 'metadata' ? 'تم استخراج البيانات!' : 'جاهز للتحميل!'}
-                </span>
+                <span className="font-medium">تم استخراج البيانات!</span>
               </div>
 
-              {result.status === 'metadata' ? (
-                <div className="space-y-3 p-4 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Globe2 className="w-4 h-4 text-primary" />
-                    <span className="font-medium">الرابط:</span>
-                    <span className="text-muted-foreground truncate" dir="ltr">{result.url}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    ملاحظة: استخراج البيانات الوصفية الكامل (العنوان، الوصف، التاقز، عدد المشاهدات) يحتاج معالجة متقدمة على السيرفر.
-                    هذي نسخة تجريبية.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {result.url && (
-                    <button
-                      onClick={() => openDownloadLink(result.url!)}
-                      className="w-full flex items-center justify-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 transition-all"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                      <span className="font-medium">
-                        {mode === 'audio' ? 'حمّل الصوت' : 'حمّل الفيديو'}
-                      </span>
-                    </button>
-                  )}
-
-                  {result.picker && result.picker.length > 0 && (
-                    <div className="space-y-2">
-                      {result.picker.map((item, i) => (
-                        <button
-                          key={i}
-                          onClick={() => openDownloadLink(item.url)}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl glass-card hover:neon-glow transition-all text-right"
-                        >
-                          {item.thumb && (
-                            <img src={item.thumb} alt="" className="w-16 h-12 rounded-lg object-cover" />
-                          )}
-                          <span className="flex-1 text-sm font-medium">ملف #{i + 1}</span>
-                          <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                        </button>
-                      ))}
+              {/* Thumbnail + Title */}
+              <div className="flex gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
+                {result.thumbnail && (
+                  <img
+                    src={result.thumbnail}
+                    alt={result.title || ''}
+                    className="w-40 h-24 rounded-lg object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <p className="font-bold text-sm line-clamp-2">{result.title || 'بدون عنوان'}</p>
+                  {result.uploader && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <User className="w-3.5 h-3.5" />
+                      {result.uploader}
                     </div>
                   )}
-                </>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                {result.duration && (
+                  <div className="p-3 rounded-xl bg-secondary/30 text-center">
+                    <Clock className="w-4 h-4 mx-auto mb-1 text-primary" />
+                    <p className="text-xs text-muted-foreground">المدة</p>
+                    <p className="text-sm font-bold">{formatDuration(result.duration)}</p>
+                  </div>
+                )}
+                {result.view_count !== undefined && (
+                  <div className="p-3 rounded-xl bg-secondary/30 text-center">
+                    <Eye className="w-4 h-4 mx-auto mb-1 text-primary" />
+                    <p className="text-xs text-muted-foreground">مشاهدات</p>
+                    <p className="text-sm font-bold">{formatNumber(result.view_count)}</p>
+                  </div>
+                )}
+                {result.like_count !== undefined && (
+                  <div className="p-3 rounded-xl bg-secondary/30 text-center">
+                    <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-primary" />
+                    <p className="text-xs text-muted-foreground">إعجابات</p>
+                    <p className="text-sm font-bold">{formatNumber(result.like_count)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {result.description && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">الوصف:</p>
+                  <div className="p-3 rounded-xl bg-secondary/30 border border-border max-h-40 overflow-y-auto">
+                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed" dir="auto">
+                      {result.description.slice(0, 1000)}
+                      {result.description.length > 1000 ? '...' : ''}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Source info */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Globe2 className="w-3.5 h-3.5" />
+                <span>المصدر: {result.extractor || 'غير معروف'}</span>
+                {result.webpage_url && (
+                  <a
+                    href={result.webpage_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline mr-2"
+                    dir="ltr"
+                  >
+                    الرابط الأصلي
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Download Result (audio/video modes) */}
+          {result && mode !== 'transcribe' && mode !== 'metadata' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-green-400">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-medium">جاهز للتحميل!</span>
+              </div>
+
+              {/* Video info */}
+              {result.title && (
+                <div className="flex gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
+                  {result.thumbnail && (
+                    <img
+                      src={result.thumbnail}
+                      alt={result.title}
+                      className="w-32 h-20 rounded-lg object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="font-medium text-sm line-clamp-2">{result.title}</p>
+                    {result.uploader && (
+                      <p className="text-xs text-muted-foreground">{result.uploader}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {result.url && (
+                <button
+                  onClick={() => openDownloadLink(result.url!)}
+                  className="w-full flex items-center justify-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 transition-all"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  <span className="font-medium">
+                    {mode === 'audio' ? 'حمّل الصوت' : 'حمّل الفيديو'}
+                  </span>
+                </button>
+              )}
+
+              {result.picker && result.picker.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">اختر الجودة:</p>
+                  {result.picker.map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => openDownloadLink(item.url)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl glass-card hover:neon-glow transition-all text-right"
+                    >
+                      {item.type === 'video' ? (
+                        <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                      ) : (
+                        <Music className="w-5 h-5 text-accent flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {item.resolution || `${item.type === 'video' ? 'فيديو' : 'صوت'} #${i + 1}`}
+                          </span>
+                          {item.ext && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground uppercase">
+                              {item.ext}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )}

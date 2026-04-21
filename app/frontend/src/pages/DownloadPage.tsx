@@ -7,15 +7,28 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface PickerItem {
+  url: string;
+  thumb?: string;
+  type?: string;
+  resolution?: string;
+  ext?: string;
+  filesize?: number | null;
+  tbr?: number | null;
+}
+
 interface DownloadResult {
-  status: string;
+  status?: string;
   url?: string;
   filename?: string;
-  picker?: Array<{
-    url: string;
-    thumb?: string;
-    type?: string;
-  }>;
+  title?: string;
+  thumbnail?: string;
+  duration?: number;
+  uploader?: string;
+  view_count?: number;
+  extractor?: string;
+  audio_only?: boolean;
+  picker?: PickerItem[];
 }
 
 const qualityOptions = [
@@ -26,6 +39,23 @@ const qualityOptions = [
   { value: '480', label: 'SD (480p)' },
   { value: '360', label: '360p' },
 ];
+
+function formatFileSize(bytes: number | null | undefined): string {
+  if (!bytes) return '';
+  if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} GB`;
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${bytes} B`;
+}
+
+function formatDuration(seconds: number | undefined): string {
+  if (!seconds) return '';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 export default function DownloadPage() {
   const [url, setUrl] = useState('');
@@ -63,6 +93,9 @@ export default function DownloadPage() {
           url: url.trim(),
           quality,
           audio_only: audioOnly,
+        },
+        options: {
+          timeout: 120_000,
         },
       });
 
@@ -221,6 +254,33 @@ export default function DownloadPage() {
                 <span className="font-medium">جاهز للتحميل!</span>
               </div>
 
+              {/* Video info card */}
+              {result.title && (
+                <div className="flex gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
+                  {result.thumbnail && (
+                    <img
+                      src={result.thumbnail}
+                      alt={result.title}
+                      className="w-32 h-20 rounded-lg object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="font-medium text-sm line-clamp-2">{result.title}</p>
+                    {result.uploader && (
+                      <p className="text-xs text-muted-foreground">{result.uploader}</p>
+                    )}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {result.duration && (
+                        <span>{formatDuration(result.duration)}</span>
+                      )}
+                      {result.extractor && (
+                        <span className="capitalize">{result.extractor}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Direct download link */}
               {result.url && (
                 <button
@@ -237,10 +297,10 @@ export default function DownloadPage() {
                 </button>
               )}
 
-              {/* Picker (multiple options) */}
+              {/* Picker (multiple quality options) */}
               {result.picker && result.picker.length > 0 && (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">اختر اللي تبيه:</p>
+                  <p className="text-sm text-muted-foreground">اختر الجودة اللي تبيها:</p>
                   <div className="grid gap-2">
                     {result.picker.map((item, i) => (
                       <button
@@ -248,26 +308,29 @@ export default function DownloadPage() {
                         onClick={() => openDownloadLink(item.url)}
                         className="flex items-center gap-3 p-3 rounded-xl glass-card hover:neon-glow transition-all text-right"
                       >
-                        {item.thumb && (
-                          <img
-                            src={item.thumb}
-                            alt=""
-                            className="w-16 h-12 rounded-lg object-cover"
-                          />
+                        {item.type === 'video' ? (
+                          <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                        ) : (
+                          <Music className="w-5 h-5 text-accent flex-shrink-0" />
                         )}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            {item.type === 'video' ? (
-                              <Video className="w-4 h-4 text-primary" />
-                            ) : (
-                              <FileText className="w-4 h-4 text-accent" />
-                            )}
                             <span className="text-sm font-medium">
-                              {item.type === 'video' ? 'فيديو' : 'ملف'} #{i + 1}
+                              {item.resolution || `${item.type === 'video' ? 'فيديو' : 'صوت'} #${i + 1}`}
                             </span>
+                            {item.ext && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground uppercase">
+                                {item.ext}
+                              </span>
+                            )}
                           </div>
+                          {item.filesize && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatFileSize(item.filesize)}
+                            </span>
+                          )}
                         </div>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                        <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -295,7 +358,7 @@ export default function DownloadPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>
-              إذا ما اشتغل الرابط، تأكد إنه رابط صحيح وكامل
+              يدعم يوتيوب، تويتر، إنستقرام، تيك توك، وأكثر من 1000 موقع
             </li>
           </ul>
         </div>
