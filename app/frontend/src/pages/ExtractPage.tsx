@@ -3,11 +3,12 @@ import Navbar from '@/components/Navbar';
 import { client } from '@/lib/api';
 import {
   Scissors, Link2, Music, Video, FileText, Globe2,
-  Loader2, AlertCircle, CheckCircle2, ExternalLink, Clipboard, X
+  Loader2, AlertCircle, CheckCircle2, ExternalLink, Clipboard, X,
+  Copy, Check, Subtitles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ExtractionMode = 'audio' | 'video' | 'metadata';
+type ExtractionMode = 'audio' | 'video' | 'metadata' | 'transcribe';
 
 interface ExtractionResult {
   status: string;
@@ -20,9 +21,14 @@ interface ExtractionResult {
   }>;
 }
 
+interface TranscriptionResult {
+  text: string;
+}
+
 const extractionModes: { id: ExtractionMode; label: string; icon: typeof Music; desc: string }[] = [
   { id: 'audio', label: 'استخراج الصوت', icon: Music, desc: 'حمّل الصوت بس من أي فيديو (MP3)' },
   { id: 'video', label: 'استخراج الفيديو', icon: Video, desc: 'حمّل الفيديو بدون صوت' },
+  { id: 'transcribe', label: 'تفريغ نصي', icon: Subtitles, desc: 'حوّل الصوت لنص مكتوب تلقائياً' },
   { id: 'metadata', label: 'البيانات الوصفية', icon: FileText, desc: 'اسحب معلومات الفيديو (العنوان، الوصف، التاقز)' },
 ];
 
@@ -31,7 +37,9 @@ export default function ExtractPage() {
   const [mode, setMode] = useState<ExtractionMode>('audio');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExtractionResult | null>(null);
+  const [transcriptionText, setTranscriptionText] = useState('');
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const handlePaste = async () => {
     try {
@@ -40,6 +48,18 @@ export default function ExtractPage() {
       toast.success('تم لصق الرابط!');
     } catch {
       toast.error('ما قدرنا نلصق، حاول يدوي');
+    }
+  };
+
+  const handleCopyText = async () => {
+    if (!transcriptionText) return;
+    try {
+      await navigator.clipboard.writeText(transcriptionText);
+      setCopied(true);
+      toast.success('تم نسخ النص!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('ما قدرنا ننسخ');
     }
   };
 
@@ -52,16 +72,36 @@ export default function ExtractPage() {
     setLoading(true);
     setError('');
     setResult(null);
+    setTranscriptionText('');
 
     try {
       if (mode === 'metadata') {
-        // For metadata, we'll show a simulated extraction
         await new Promise((resolve) => setTimeout(resolve, 1500));
         toast.success('تم استخراج البيانات الوصفية!');
         setResult({
           status: 'metadata',
           url: url,
         });
+      } else if (mode === 'transcribe') {
+        const response = await client.apiCall.invoke({
+          url: '/api/v1/download/transcribe',
+          method: 'POST',
+          data: {
+            url: url.trim(),
+          },
+          options: {
+            timeout: 300_000,
+          },
+        });
+
+        const data = response.data;
+
+        if (data.success && data.text) {
+          setTranscriptionText(data.text);
+          toast.success('تم التفريغ النصي بنجاح!');
+        } else {
+          setError(data.error || 'صار خطأ أثناء التفريغ، حاول مرة ثانية');
+        }
       } else {
         const response = await client.apiCall.invoke({
           url: '/api/v1/download/fetch',
@@ -107,18 +147,18 @@ export default function ExtractPage() {
             </span>
           </h1>
           <p className="text-muted-foreground text-lg">
-            افصل الصوت عن الفيديو، اسحب الترجمات والبيانات الوصفية بضغطة زر
+            افصل الصوت عن الفيديو، سوّي تفريغ نصي، واسحب البيانات الوصفية بضغطة زر
           </p>
         </div>
 
         {/* Mode Selection */}
-        <div className="grid sm:grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {extractionModes.map((m) => {
             const Icon = m.icon;
             return (
               <button
                 key={m.id}
-                onClick={() => { setMode(m.id); setResult(null); setError(''); }}
+                onClick={() => { setMode(m.id); setResult(null); setError(''); setTranscriptionText(''); }}
                 className={`glass-card rounded-xl p-4 text-right transition-all ${
                   mode === m.id
                     ? 'neon-glow border-primary/50'
@@ -140,7 +180,7 @@ export default function ExtractPage() {
           <div className="space-y-3">
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Link2 className="w-4 h-4" />
-              رابط الفيديو
+              {mode === 'transcribe' ? 'رابط الفيديو أو الصوت' : 'رابط الفيديو'}
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -154,7 +194,7 @@ export default function ExtractPage() {
                 />
                 {url && (
                   <button
-                    onClick={() => { setUrl(''); setResult(null); setError(''); }}
+                    onClick={() => { setUrl(''); setResult(null); setError(''); setTranscriptionText(''); }}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-4 h-4" />
@@ -179,12 +219,12 @@ export default function ExtractPage() {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                جاري الاستخراج...
+                {mode === 'transcribe' ? 'جاري التفريغ النصي...' : 'جاري الاستخراج...'}
               </>
             ) : (
               <>
                 <Scissors className="w-5 h-5" />
-                استخرج الآن!
+                {mode === 'transcribe' ? 'فرّغ النص!' : 'استخرج الآن!'}
               </>
             )}
           </button>
@@ -197,8 +237,40 @@ export default function ExtractPage() {
             </div>
           )}
 
-          {/* Result */}
-          {result && (
+          {/* Transcription Result */}
+          {mode === 'transcribe' && transcriptionText && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-medium">تم التفريغ النصي!</span>
+                </div>
+                <button
+                  onClick={handleCopyText}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg glass-card text-sm hover:bg-secondary/50 transition-all text-foreground"
+                >
+                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                  {copied ? 'تم النسخ!' : 'انسخ النص'}
+                </button>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  readOnly
+                  value={transcriptionText}
+                  onChange={(e) => setTranscriptionText(e.target.value)}
+                  className="w-full h-64 bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground text-sm leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  dir="auto"
+                />
+                <div className="absolute bottom-3 left-3 text-xs text-muted-foreground">
+                  {transcriptionText.length} حرف
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Download Result */}
+          {result && mode !== 'transcribe' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-green-400">
                 <CheckCircle2 className="w-5 h-5" />
@@ -257,7 +329,7 @@ export default function ExtractPage() {
         </div>
 
         {/* Use Cases */}
-        <div className="mt-8 grid sm:grid-cols-2 gap-4">
+        <div className="mt-8 grid sm:grid-cols-3 gap-4">
           <div className="glass-card rounded-2xl p-5 space-y-2">
             <h3 className="font-bold flex items-center gap-2">
               <Music className="w-5 h-5 text-purple-400" />
@@ -265,6 +337,15 @@ export default function ExtractPage() {
             </h3>
             <p className="text-sm text-muted-foreground">
               استخرج الصوت من أي فيديو لاستخدامه في البودكاست أو الريلز
+            </p>
+          </div>
+          <div className="glass-card rounded-2xl p-5 space-y-2">
+            <h3 className="font-bold flex items-center gap-2">
+              <Subtitles className="w-5 h-5 text-green-400" />
+              للتفريغ النصي
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              حوّل أي فيديو أو صوت لنص مكتوب تلقائياً بالذكاء الاصطناعي
             </p>
           </div>
           <div className="glass-card rounded-2xl p-5 space-y-2">
