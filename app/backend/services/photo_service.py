@@ -50,12 +50,18 @@ async def extract_gallery(url: str, max_items: int = 50) -> dict[str, Any]:
     # `gallery-dl --simulate --dump-json` prints one JSON record per item to
     # stdout without downloading, which is exactly what we need to return
     # direct URLs to the client.
+    # NB: `--` terminates gallery-dl's option parsing so that a user-supplied
+    # URL starting with `--` (e.g. `--exec=id`) is treated as a positional
+    # argument rather than a CLI flag. Without this separator, an attacker
+    # could abuse flags like --exec, --extractors, --input-file, --write-log,
+    # or --config to execute arbitrary code or read arbitrary files.
     cmd = [
         GALLERY_DL_BIN,
         "--simulate",
         "--dump-json",
         "--range",
         f"1-{max_items}",
+        "--",
         url,
     ]
 

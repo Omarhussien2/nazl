@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from services.download_service import fetch_video_info, fetch_audio_url
 from services.photo_service import extract_gallery
 from services.aihub import AIHubService
@@ -23,7 +23,7 @@ class TranscribeRequest(BaseModel):
 
 class PhotoRequest(BaseModel):
     url: str
-    max_items: int = 50
+    max_items: int = Field(default=50, ge=1, le=500)
 
 
 @router.post("/photos")
