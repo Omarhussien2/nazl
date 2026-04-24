@@ -1,167 +1,136 @@
 import { Link } from 'react-router-dom';
-import { Download, Share2, Scissors, Zap, Globe, Shield, ArrowLeft, Play } from 'lucide-react';
+import {
+  Download,
+  Scissors,
+  Zap,
+  Globe,
+  Shield,
+  ArrowLeft,
+  Image as ImageIcon,
+  Mic,
+  Archive,
+} from 'lucide-react';
 import Navbar from '@/components/Navbar';
-
-const HERO_IMG = 'https://mgx-backend-cdn.metadl.com/generate/images/1133212/2026-04-19/m42nuuaaafaa/hero-download-neon.png';
-const SPEED_IMG = 'https://mgx-backend-cdn.metadl.com/generate/images/1133212/2026-04-19/m42nnxyaae7a/feature-speed.png';
-const SHARE_IMG = 'https://mgx-backend-cdn.metadl.com/generate/images/1133212/2026-04-19/m42nosqaae7q/feature-share.png';
-const EXTRACT_IMG = 'https://mgx-backend-cdn.metadl.com/generate/images/1133212/2026-04-19/m42nndaaafbq/feature-extract.png';
 
 const supportedSites = [
   'YouTube', 'TikTok', 'Instagram', 'Twitter/X', 'Facebook',
   'Reddit', 'Twitch', 'SoundCloud', 'Bilibili', 'Vimeo',
-  'Dailymotion', 'Pinterest', 'Tumblr', 'VK', 'OK.ru',
-  'Rutube', 'Loom', 'Streamable', 'Vine', '+1000 موقع ثاني',
+  'Dailymotion', 'Pinterest', 'Tumblr', 'Threads', 'Snapchat',
+  'Loom', 'Streamable', '+1800 موقع آخر',
 ];
 
 const features = [
   {
-    icon: Zap,
-    title: 'سرعة خارقة',
-    desc: 'حمّل فيديوهاتك بأعلى سرعة ممكنة بدون أي تأخير أو انتظار',
-    img: SPEED_IMG,
-    color: 'from-purple-500 to-blue-500',
+    icon: Mic,
+    title: 'فرّغ',
+    desc: 'تفريغ صوتي عربي بالطوابع الزمنية عبر Whisper. أرسل الرابط واحصل على النص الكامل خلال دقائق.',
   },
   {
-    icon: Share2,
-    title: 'مشاركة سحرية P2P',
-    desc: 'شارك ملفاتك مع أي شخص بكلمة سر من 4 كلمات بس، بدون رفع على أي سحابة',
-    img: SHARE_IMG,
-    color: 'from-cyan-500 to-green-500',
+    icon: Download,
+    title: 'نزّل',
+    desc: 'حمّل الفيديو أو الصوت من 1800+ منصّة بجودات متعدّدة (MP3/MP4/حتى 4K) بضغطة واحدة.',
   },
   {
-    icon: Scissors,
-    title: 'استخراج الأصول',
-    desc: 'افصل الصوت عن الفيديو، اسحب الترجمات والبيانات الوصفية بضغطة زر',
-    img: EXTRACT_IMG,
-    color: 'from-pink-500 to-orange-500',
+    icon: ImageIcon,
+    title: 'صوّر',
+    desc: 'استخرج صور إنستغرام وتويتر وبنترست من أيّ رابط — حتى الـ carousels كاملة.',
+  },
+  {
+    icon: Archive,
+    title: 'أرشف',
+    desc: 'احفظ كل ما نزّلته في مكتبتك الخاصة، مع بحث نصّي داخل النصوص المُفرَّغة.',
   },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background bg-grid">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-20 overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-40 right-0 w-[300px] h-[300px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
+      {/* Hero Section — antimetal-style dark gradient */}
+      <section className="relative pt-24 pb-28 overflow-hidden bg-hero-gradient">
+        <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />
+        <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#1E4AAA]/30 rounded-full blur-[140px] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Text Content */}
-            <div className="text-center lg:text-right space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm text-primary">
-                <Globe className="w-4 h-4" />
-                <span>يدعم أكثر من 1000 موقع</span>
-              </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-white/80 backdrop-blur">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4F14B] animate-pulse" />
+            جديد — دعم الصور والـ carousels
+          </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="bg-gradient-to-l from-[#6C5CE7] to-[#00D2FF] bg-clip-text text-transparent neon-text">
-                  نزّل
-                </span>
-                <br />
-                <span className="text-foreground">أي فيديو بضغطة زر</span>
-              </h1>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white">
+            أي رابط، من أي منصّة.
+            <br />
+            <span className="text-[#D4F14B]">فيديو أو صوت أو صورة</span> في ثوانٍ.
+          </h1>
 
-              <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 lg:mr-0">
-                انسخ الرابط، اضغط تحميل، وانتهى الأمر! منصة مجانية 100% لتحميل الفيديوهات
-                ومشاركة الملفات بتقنية P2P بدون أي تعقيد.
-              </p>
+          <p className="text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
+            الصق الرابط من يوتيوب، تيك توك، إنستغرام، تويتر، بنترست أو 1800 منصّة أخرى —
+            ونزل يتولّى التحميل والتفريغ العربي والأرشفة. مجاني، بدون إعلانات، مفتوح المصدر.
+          </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link
-                  to="/download"
-                  className="btn-gradient px-8 py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 group"
-                >
-                  <Download className="w-5 h-5" />
-                  يلا نزّل!
-                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  to="/share"
-                  className="px-8 py-4 rounded-xl font-bold text-lg glass-card text-foreground hover:bg-secondary/50 transition-all flex items-center justify-center gap-2"
-                >
-                  <Share2 className="w-5 h-5" />
-                  شارك ملفاتك
-                </Link>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/download"
+              className="btn-lime px-8 py-4 rounded-xl text-lg inline-flex items-center justify-center gap-2 group"
+            >
+              <Download className="w-5 h-5" />
+              ابدأ مجاناً
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            </Link>
+            <Link
+              to="/extract"
+              className="px-8 py-4 rounded-xl font-bold text-lg bg-white/10 text-white hover:bg-white/15 border border-white/15 transition-all inline-flex items-center justify-center gap-2"
+            >
+              <Mic className="w-5 h-5" />
+              جرّب التفريغ
+            </Link>
+          </div>
 
-              <div className="flex items-center gap-6 justify-center lg:justify-start text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-green-400" />
-                  مجاني 100%
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  بدون إعلانات
-                </div>
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-cyan-400" />
-                  مفتوح المصدر
-                </div>
-              </div>
+          <div className="flex flex-wrap items-center gap-6 justify-center text-sm text-white/60 pt-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#D4F14B]" />
+              مجاني بالكامل
             </div>
-
-            {/* Hero Image */}
-            <div className="relative animate-float">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl blur-xl" />
-              <img
-                src={HERO_IMG}
-                alt="نزّل - منصة التحميل"
-                className="relative rounded-2xl neon-glow w-full object-cover"
-              />
-              {/* Floating badge */}
-              <div className="absolute -bottom-4 -right-4 glass-card rounded-xl px-4 py-3 flex items-center gap-2 neon-glow animate-pulse-glow">
-                <Play className="w-5 h-5 text-green-400" />
-                <span className="text-sm font-bold">+1000 موقع مدعوم</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[#D4F14B]" />
+              بدون إعلانات
+            </div>
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-[#D4F14B]" />
+              مفتوح المصدر
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 relative">
+      {/* Features — 4 cards */}
+      <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              ليش{' '}
-              <span className="bg-gradient-to-l from-[#6C5CE7] to-[#00D2FF] bg-clip-text text-transparent">
-                نزّل
-              </span>
-              ؟
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              الصق الرابط، و<span className="text-[#D4F14B]">نزل</span> يتولّى الباقي
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              مو بس أداة تحميل، هذي منصة متكاملة تخليك تحمّل وتشارك وتستخرج كل شي تبيه
+              أربع أدوات في منصة واحدة — تفريغ، تحميل، استخراج صور، وأرشفة.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, i) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={i}
-                  className="glass-card rounded-2xl p-6 hover:neon-glow transition-all duration-300 group cursor-default"
+                  className="glass-card rounded-2xl p-6 hover:-translate-y-1 transition-transform duration-300"
                 >
-                  <div className="relative h-48 rounded-xl overflow-hidden mb-6">
-                    <img
-                      src={feature.img}
-                      alt={feature.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${feature.color} opacity-20`} />
+                  <div className="w-12 h-12 rounded-xl bg-[#D4F14B]/15 border border-[#D4F14B]/30 flex items-center justify-center mb-5">
+                    <Icon className="w-6 h-6 text-[#D4F14B]" />
                   </div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold">{feature.title}</h3>
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
+                  <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">
+                    {feature.desc}
+                  </p>
                 </div>
               );
             })}
@@ -169,14 +138,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Supported Sites */}
-      <section className="py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none" />
+      {/* Supported sites */}
+      <section className="py-20 relative bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-12 space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-bold">المواقع المدعومة</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              ندعم <span className="text-[#D4F14B]">+1800</span> منصّة
+            </h2>
             <p className="text-muted-foreground text-lg">
-              ندعم أكثر من 1000 موقع، هذي بس أشهرها
+              الأرقام من قائمة yt-dlp الرسميّة — هذي بعض الأشهر.
             </p>
           </div>
 
@@ -184,7 +154,7 @@ export default function LandingPage() {
             {supportedSites.map((site, i) => (
               <span
                 key={i}
-                className="glass-card px-4 py-2 rounded-full text-sm font-medium text-foreground hover:neon-glow hover:text-primary transition-all cursor-default"
+                className="glass-card px-4 py-2 rounded-full text-sm font-medium text-foreground/90 hover:text-[#D4F14B] hover:border-[#D4F14B]/40 transition-all cursor-default"
               >
                 {site}
               </span>
@@ -193,34 +163,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="glass-card rounded-3xl p-10 sm:p-16 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-l from-[#6C5CE7] to-[#00D2FF]" />
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              جاهز تبدأ؟
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-lg mx-auto">
-              حط الرابط وخلنا نسوي الباقي. مجاني، سريع، وبدون أي تعقيد.
-            </p>
-            <Link
-              to="/download"
-              className="btn-gradient px-10 py-4 rounded-xl text-white font-bold text-lg inline-flex items-center gap-2 group"
-            >
-              <Download className="w-5 h-5" />
-              يلا نبدأ!
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </Link>
-          </div>
+      {/* CTA Section — dark band before footer */}
+      <section className="py-20 bg-hero-gradient relative overflow-hidden">
+        <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+            جاهز تبدأ؟
+          </h2>
+          <p className="text-white/70 text-lg mb-8 max-w-lg mx-auto">
+            الصق الرابط، ونزل يتولّى الباقي. مجاني، سريع، وبدون تسجيل لأول تفريغة.
+          </p>
+          <Link
+            to="/download"
+            className="btn-lime px-10 py-4 rounded-xl text-lg inline-flex items-center gap-2 group"
+          >
+            <Scissors className="w-5 h-5" />
+            جرّب الآن
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          </Link>
+          <p className="mt-6 text-xs text-white/50">
+            10 تفريغات/يوم &nbsp;·&nbsp; حلقة حتى 60 دقيقة &nbsp;·&nbsp; تحميلات غير محدودة
+          </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border/30">
+      <footer className="py-8 border-t border-border bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-muted-foreground text-sm">
-            صُنع بـ 💜 — نزّل © {new Date().getFullYear()} — مفتوح المصدر ومجاني للجميع
+            نزل © {new Date().getFullYear()} — مفتوح المصدر ومجاني للجميع
           </p>
         </div>
       </footer>

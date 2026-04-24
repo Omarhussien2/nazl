@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 import { viteSourceLocator } from '@metagptx/vite-plugin-source-locator';
-import { atoms } from '@metagptx/web-sdk/plugins';
 import { vitePrerenderPlugin } from 'vite-prerender-plugin';
 import Sitemap from 'vite-plugin-sitemap';
 import { getBlogRoutes } from './prerender/blog-routes.js';
@@ -35,7 +34,6 @@ export default defineConfig(({ command }) => {
         prefix: 'mgx', // Prefix used to identify source locations; do not change.
       }),
       react(),
-      atoms(),
       Sitemap({
         hostname: process.env.VITE_SITE_URL ?? 'https://nzl.sa',
         lastmod: getSitemapLastmod(),
