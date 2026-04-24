@@ -6,7 +6,7 @@ This module implements the policy decisions Omar approved for the MVP:
     user per UTC day.
   - Each transcription clip must be \u2264 ``settings.max_transcribe_seconds``
     (default 3600 s = 60 minutes).
-  - Downloads (yt-dlp / gallery-dl) are unmetered \u2014 they cost us nothing.
+  - Downloads (yt-dlp / gallery-dl) are unmetered — they cost us nothing.
   - Anonymous visitors get exactly one free transcription, tracked by a
     signed cookie identifier.
 

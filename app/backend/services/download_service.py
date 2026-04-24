@@ -204,12 +204,14 @@ async def fetch_audio_url(url: str) -> dict:
                     return {"success": False, "error": "ما قدرنا نحصل على رابط الصوت"}
                 
                 title = info.get("title", "")
+                duration = info.get("duration")
                 
                 return {
                     "success": True,
                     "data": {
                         "url": audio_url,
                         "title": title,
+                        "duration": duration,
                     }
                 }
         
