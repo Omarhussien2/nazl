@@ -33,16 +33,33 @@ class DatabaseManager:
 
     @staticmethod
     def _sanitize_query_params(url):
-        """Remove query parameters that are incompatible with asyncpg.
+        """Adapt query parameters for asyncpg compatibility.
 
-        Some providers (e.g. Neon) may inject parameters like ``channel_binding``
-        that are not supported by asyncpg and cause connection failures.
+        - ``channel_binding`` is silently dropped: asyncpg doesn't recognise
+          it and Neon negotiates channel binding via the TLS handshake
+          anyway, so losing the hint is safe.
+        - ``sslmode=...`` is translated to ``ssl=...``. asyncpg accepts the
+          same set of libpq values (``disable``/``allow``/``prefer``/``require``/
+          ``verify-ca``/``verify-full``) but under the ``ssl`` name. Without
+          the translation, asyncpg raises ``TypeError: connect() got an
+          unexpected keyword argument 'sslmode'`` and the app can't boot
+          against Neon/Supabase/etc.
         """
-        unsupported_params = {"channel_binding"}
-        found = unsupported_params & set(url.query)
-        if found:
-            logger.warning(f"Removed unsupported database URL query params: {sorted(found)}")
-            return url.set(query={k: v for k, v in url.query.items() if k not in unsupported_params})
+        query = dict(url.query)
+        changed = False
+        if "channel_binding" in query:
+            query.pop("channel_binding")
+            changed = True
+        if "sslmode" in query and "ssl" not in query:
+            query["ssl"] = query.pop("sslmode")
+            changed = True
+        elif "sslmode" in query:
+            # Both keys present — asyncpg only understands ``ssl``; drop the dup.
+            query.pop("sslmode")
+            changed = True
+        if changed:
+            logger.warning("Sanitised database URL query params for asyncpg compatibility")
+            return url.set(query=query)
         return url
 
     def _normalize_async_database_url(self, raw_url: str) -> str:
