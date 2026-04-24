@@ -21,10 +21,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg btn-gradient flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-[#D4F14B] flex items-center justify-center">
+              <Download className="w-5 h-5 text-[#030813]" />
             </div>
-            <span className="text-xl font-bold neon-text bg-gradient-to-l from-[#6C5CE7] to-[#00D2FF] bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-[#D4F14B] neon-text">
               نزّل
             </span>
           </Link>
