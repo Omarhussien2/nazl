@@ -215,11 +215,28 @@
   background: hsl(var(--primary) / 0.7);
 }
 
-/* Legacy aliases kept temporarily so older components keep compiling
-   while we migrate pages to the new theme tokens. */
-.btn-gradient { @apply btn-lime; }
+/* Legacy aliases kept temporarily so older components (Navbar, DownloadPage,
+   SharePage, ExtractPage) keep compiling while we migrate them to the new
+   theme tokens in a follow-up PR.
+   - `.btn-gradient` is inlined (not `@apply btn-lime`) because `btn-lime`
+     is defined outside `@layer`, which makes it unavailable to Tailwind's
+     `@apply` directive.
+   - `.neon-text` stays as text-shadow only; Navbar combines it with
+     `bg-clip-text text-transparent` for gradient text, so we must NOT
+     set `color` here or the gradient breaks. */
+.btn-gradient {
+  background-color: #D4F14B;
+  color: #030813;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.btn-gradient:hover {
+  background-color: #C3E23A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212, 241, 75, 0.35);
+}
 .neon-glow { box-shadow: 0 0 20px rgba(212, 241, 75, 0.25); }
-.neon-text { color: #D4F14B; }
-.neon-text-cyan { color: #B8D4F7; }
 .neon-glow-cyan { box-shadow: 0 0 20px rgba(184, 212, 247, 0.25); }
+.neon-text { text-shadow: 0 0 10px rgba(212, 241, 75, 0.35); }
+.neon-text-cyan { text-shadow: 0 0 10px rgba(184, 212, 247, 0.35); }
 .animate-pulse-glow { animation: float 3s ease-in-out infinite; }
