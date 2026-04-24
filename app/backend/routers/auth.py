@@ -12,6 +12,7 @@ from core.auth import (
     generate_code_verifier,
     generate_nonce,
     generate_state,
+    get_token_endpoint,
     validate_id_token,
 )
 from core.config import settings
@@ -90,7 +91,7 @@ async def login(request: Request, db: AsyncSession = Depends(get_db)):
     redirect_uri = f"{backend_url}/api/v1/auth/callback"
     logger.info("[login] Starting OIDC flow with redirect_uri=%s", redirect_uri)
 
-    auth_url = build_authorization_url(state, nonce, code_challenge, redirect_uri=redirect_uri)
+    auth_url = await build_authorization_url(state, nonce, code_challenge, redirect_uri=redirect_uri)
     return RedirectResponse(
         url=auth_url,
         status_code=status.HTTP_302_FOUND,
@@ -149,7 +150,7 @@ async def callback(
         if code_verifier:
             token_data["code_verifier"] = code_verifier
 
-        token_url = f"{settings.oidc_issuer_url}/token"
+        token_url = await get_token_endpoint()
         try:
             async with httpx.AsyncClient() as client:
                 token_response = await client.post(
@@ -316,6 +317,13 @@ async def get_current_user_info(current_user: UserResponse = Depends(get_current
 
 @router.get("/logout")
 async def logout():
-    """Logout user."""
-    logout_url = build_logout_url()
+    """Logout user.
+
+    For providers that advertise an ``end_session_endpoint`` (e.g. Auth0,
+    Keycloak), redirect the client there to terminate the IdP session too.
+    For providers that don't (e.g. Google), there is no standard remote
+    logout: the frontend should drop the local token and the client cookie
+    is cleared on the next request.
+    """
+    logout_url = await build_logout_url()
     return {"redirect_url": logout_url}
