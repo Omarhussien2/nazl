@@ -65,11 +65,21 @@ async def extract_gallery(url: str, max_items: int = 50) -> dict[str, Any]:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60)
     except FileNotFoundError:
         logger.error("gallery-dl binary not found on PATH")
         return {"success": False, "error": "مكتبة gallery-dl غير مثبّتة على الخادم"}
+
+    try:
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60)
     except asyncio.TimeoutError:
+        # `asyncio.wait_for` cancels `communicate()` but does NOT reap the
+        # underlying OS process. Kill it and wait for it to exit so we don't
+        # leak a gallery-dl process on every slow/hanging URL.
+        proc.kill()
+        try:
+            await proc.wait()
+        except Exception:  # noqa: BLE001 - best-effort cleanup
+            pass
         logger.warning("gallery-dl timed out for %s", url)
         return {"success": False, "error": "انتهت المهلة أثناء استخراج الصور"}
 
