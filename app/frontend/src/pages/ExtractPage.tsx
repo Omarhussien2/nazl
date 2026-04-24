@@ -193,7 +193,7 @@ export default function ExtractPage() {
         {/* Header */}
         <div className="text-center mb-10 space-y-3">
           <h1 className="text-3xl sm:text-4xl font-bold">
-            <span className="bg-gradient-to-l from-[#FF6B6B] to-[#6C5CE7] bg-clip-text text-transparent">
+            <span className="text-[#D4F14B]">
               استخرج الأصول
             </span>
           </h1>
@@ -265,7 +265,7 @@ export default function ExtractPage() {
           <button
             onClick={handleExtract}
             disabled={loading || !url.trim()}
-            className="w-full btn-gradient py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-gradient py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

@@ -105,7 +105,7 @@ export default function SharePage() {
         {/* Header */}
         <div className="text-center mb-10 space-y-3">
           <h1 className="text-3xl sm:text-4xl font-bold">
-            <span className="bg-gradient-to-l from-[#00D2FF] to-[#6C5CE7] bg-clip-text text-transparent">
+            <span className="text-[#D4F14B]">
               شارك ملفاتك
             </span>
           </h1>
@@ -188,7 +188,7 @@ export default function SharePage() {
                 <button
                   onClick={handleStartSending}
                   disabled={selectedFiles.length === 0}
-                  className="w-full btn-gradient py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full btn-gradient py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Share2 className="w-5 h-5" />
                   جهّز كلمة السر
@@ -265,7 +265,7 @@ export default function SharePage() {
                 <button
                   onClick={handleConnect}
                   disabled={!receiveCode.trim()}
-                  className="w-full btn-gradient py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full btn-gradient py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Wifi className="w-5 h-5" />
                   اتصل واستلم
@@ -282,7 +282,7 @@ export default function SharePage() {
                     <div className="space-y-2">
                       <div className="w-full h-3 bg-secondary/50 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-l from-[#6C5CE7] to-[#00D2FF] rounded-full transition-all duration-300 animate-progress"
+                          className="h-full bg-[#D4F14B] rounded-full transition-all duration-300 animate-progress"
                           style={{ width: `${progress}%` }}
                         />
                       </div>

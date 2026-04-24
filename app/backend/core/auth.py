@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 from core.config import settings
+from core.oidc_discovery import get_discovery_field, get_logout_url, get_oidc_discovery
 from jose import JWTError, jwt
 from jose.exceptions import ExpiredSignatureError, JWSSignatureError, JWTClaimsError
 
@@ -35,8 +36,17 @@ def generate_code_challenge(code_verifier: str) -> str:
 
 
 async def get_jwks() -> Dict[str, Any]:
-    """Get JWKS (JSON Web Key Set) from OIDC provider."""
-    jwks_url = f"{settings.oidc_issuer_url}/.well-known/jwks.json"
+    """Get JWKS (JSON Web Key Set) from the OIDC provider.
+
+    Resolves the ``jwks_uri`` via the provider's discovery document, so this
+    works for any compliant OIDC provider regardless of URL layout.
+    """
+    try:
+        jwks_url = await get_discovery_field("jwks_uri")
+    except RuntimeError as exc:
+        logger.error("Unable to resolve jwks_uri from OIDC discovery: %s", exc)
+        raise Exception("Unable to retrieve authentication keys") from exc
+
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             logger.info(f"Fetching JWKS from: {jwks_url}")
@@ -134,12 +144,14 @@ async def validate_id_token(id_token: str) -> Optional[Dict[str, Any]]:
             logger.error("ID token validation failed: No key ID found in JWT header")
             raise IDTokenValidationError("Token format is invalid", "missing_kid")
 
-        # Get JWKS from the provider
+        # Get JWKS from the provider (via discovery document).
         try:
             jwks = await get_jwks()
+            discovery = await get_oidc_discovery()
+            expected_issuer = discovery["issuer"]
         except Exception as e:
             logger.error(
-                f"ID token validation failed: Failed to fetch JWKS from issuer {settings.oidc_issuer_url}: {e}"
+                f"ID token validation failed: Failed to fetch JWKS / discovery from issuer {settings.oidc_issuer_url}: {e}"
             )
             raise IDTokenValidationError("Unable to retrieve authentication keys", "jwks_fetch_error")
 
@@ -152,7 +164,7 @@ async def validate_id_token(id_token: str) -> Optional[Dict[str, Any]]:
 
         if not key:
             logger.error(
-                f"ID token validation failed: No key found for kid: {kid} in JWKS from {settings.oidc_issuer_url}"
+                f"ID token validation failed: No key found for kid: {kid} in JWKS for issuer {expected_issuer}"
             )
             raise IDTokenValidationError("Authentication key validation failed", "key_not_found")
 
@@ -186,13 +198,17 @@ async def validate_id_token(id_token: str) -> Optional[Dict[str, Any]]:
             logger.error(f"ID token validation failed: Failed to convert JWK to PEM format: {e}")
             raise IDTokenValidationError("Authentication key processing failed", "key_conversion_error")
 
-        # Verify and decode the JWT
+        # Verify and decode the JWT. The ``issuer`` we validate against is the
+        # one advertised by the provider's discovery document, not the
+        # configured ``OIDC_ISSUER_URL`` — these can differ (e.g. Google's
+        # discovery issuer is ``https://accounts.google.com`` verbatim, with
+        # no trailing slash, regardless of the URL used to fetch discovery).
         try:
             payload = jwt.decode(
                 id_token,
                 pem_key,
                 algorithms=["RS256"],
-                issuer=settings.oidc_issuer_url,
+                issuer=expected_issuer,
                 audience=settings.oidc_client_id,
             )
             # Log user hash instead of actual user ID to avoid exposing sensitive information
@@ -227,14 +243,20 @@ async def validate_id_token(id_token: str) -> Optional[Dict[str, Any]]:
         raise IDTokenValidationError("Authentication processing failed", "unexpected_error")
 
 
-def build_authorization_url(
+async def build_authorization_url(
     state: str,
     nonce: str,
     code_challenge: Optional[str] = None,
     redirect_uri: Optional[str] = None,
 ) -> str:
-    """Build OIDC authorization URL with optional PKCE support."""
+    """Build OIDC authorization URL with optional PKCE support.
+
+    The authorization endpoint is resolved from the provider's discovery
+    document, so this works transparently for Google, Auth0, Keycloak, etc.
+    """
     import urllib.parse
+
+    authorization_endpoint = await get_discovery_field("authorization_endpoint")
 
     params = {
         "client_id": settings.oidc_client_id,
@@ -245,23 +267,51 @@ def build_authorization_url(
         "nonce": nonce,
     }
 
-    # Add PKCE parameters if provided
     if code_challenge:
         params["code_challenge"] = code_challenge
         params["code_challenge_method"] = "S256"
 
-    auth_url = f"{settings.oidc_issuer_url}/authorize?" + urllib.parse.urlencode(params)
-    return auth_url
+    # Some providers (e.g. Google) require ``access_type=offline`` to issue a
+    # refresh token, and ``prompt=consent`` to re-prompt the user. Expose both
+    # via env vars so we can opt in without code changes.
+    extra_access_type = getattr(settings, "oidc_access_type", None) if _has_setting("oidc_access_type") else None
+    extra_prompt = getattr(settings, "oidc_prompt", None) if _has_setting("oidc_prompt") else None
+    if extra_access_type:
+        params["access_type"] = extra_access_type
+    if extra_prompt:
+        params["prompt"] = extra_prompt
+
+    return f"{authorization_endpoint}?" + urllib.parse.urlencode(params)
 
 
-def build_logout_url(id_token: Optional[str] = None) -> str:
-    """Build OIDC logout URL."""
+async def get_token_endpoint() -> str:
+    """Return the provider's token endpoint from the discovery document."""
+    return await get_discovery_field("token_endpoint")
+
+
+async def build_logout_url(id_token: Optional[str] = None) -> Optional[str]:
+    """Build an OIDC RP-initiated logout URL if the provider advertises one.
+
+    Returns ``None`` for providers (like Google) that do not expose
+    ``end_session_endpoint`` — callers should fall back to clearing the
+    local session cookie and redirecting to a local logout-complete page.
+    """
     import urllib.parse
 
-    params = {"post_logout_redirect_uri": f"{settings.frontend_url}/logout-callback"}
+    endpoint = await get_logout_url()
+    if not endpoint:
+        return None
 
+    params = {"post_logout_redirect_uri": f"{settings.frontend_url}/logout-callback"}
     if id_token:
         params["id_token_hint"] = id_token
 
-    logout_url = f"{settings.oidc_issuer_url}/logout?" + urllib.parse.urlencode(params)
-    return logout_url
+    return f"{endpoint}?" + urllib.parse.urlencode(params)
+
+
+def _has_setting(name: str) -> bool:
+    try:
+        getattr(settings, name)
+        return True
+    except AttributeError:
+        return False

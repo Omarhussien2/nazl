@@ -4,85 +4,94 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Nuzul theme — antimetal.com inspired
+ * - Dark navy base (#030813 → #0E1B3D → #1E4AAA gradient)
+ * - Lime accent (#D4F14B) for primary CTAs
+ * - Light-blue (#B8D4F7) for soft fills on dark sections
+ */
 @layer base {
   :root {
-    --background: 240 30% 6%;
-    --foreground: 240 10% 95%;
+    /* Dark (default) */
+    --background: 221 65% 4%;         /* #030813 */
+    --foreground: 0 0% 100%;
 
-    --card: 240 30% 10%;
-    --card-foreground: 240 10% 95%;
+    --card: 225 62% 10%;              /* #0E1B3D */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 30% 10%;
-    --popover-foreground: 240 10% 95%;
+    --popover: 225 62% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 252 75% 60%;
-    --primary-foreground: 0 0% 100%;
+    /* Lime CTA — the antimetal signature */
+    --primary: 72 85% 62%;            /* #D4F14B */
+    --primary-foreground: 221 65% 4%; /* dark text on lime */
 
-    --secondary: 240 25% 15%;
-    --secondary-foreground: 240 10% 95%;
+    --secondary: 225 40% 18%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 25% 15%;
-    --muted-foreground: 240 15% 70%;
+    --muted: 225 40% 18%;
+    --muted-foreground: 215 25% 75%;
 
-    --accent: 190 100% 50%;
+    /* Accent — royal blue */
+    --accent: 221 70% 40%;            /* #1E4AAA */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 55%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 252 30% 20%;
-    --input: 252 30% 20%;
-    --ring: 252 75% 60%;
+    --border: 225 40% 22%;
+    --input: 225 40% 22%;
+    --ring: 72 85% 62%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 240 30% 8%;
-    --sidebar-foreground: 240 10% 95%;
-    --sidebar-primary: 252 75% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 25% 15%;
-    --sidebar-accent-foreground: 240 10% 95%;
-    --sidebar-border: 252 30% 20%;
-    --sidebar-ring: 252 75% 60%;
+    --sidebar-background: 225 62% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 72 85% 62%;
+    --sidebar-primary-foreground: 221 65% 4%;
+    --sidebar-accent: 225 40% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 225 40% 22%;
+    --sidebar-ring: 72 85% 62%;
   }
 
   .light {
-    --background: 0 0% 98%;
-    --foreground: 240 20% 10%;
+    --background: 0 0% 100%;
+    --foreground: 221 65% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 20% 10%;
+    --card-foreground: 221 65% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 20% 10%;
+    --popover-foreground: 221 65% 4%;
 
-    --primary: 252 75% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 72 75% 45%;            /* darker lime for contrast on white */
+    --primary-foreground: 221 65% 4%;
 
-    --secondary: 240 10% 94%;
-    --secondary-foreground: 240 20% 10%;
+    --secondary: 215 30% 94%;
+    --secondary-foreground: 221 65% 4%;
 
-    --muted: 240 10% 94%;
-    --muted-foreground: 240 10% 45%;
+    --muted: 215 30% 94%;
+    --muted-foreground: 225 15% 40%;
 
-    --accent: 190 100% 40%;
+    --accent: 221 70% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 88%;
-    --input: 240 10% 88%;
-    --ring: 252 75% 55%;
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 72 75% 45%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 20% 10%;
-    --sidebar-primary: 252 75% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 94%;
-    --sidebar-accent-foreground: 240 20% 10%;
-    --sidebar-border: 240 10% 88%;
-    --sidebar-ring: 252 75% 55%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 221 65% 4%;
+    --sidebar-primary: 72 75% 45%;
+    --sidebar-primary-foreground: 221 65% 4%;
+    --sidebar-accent: 215 30% 94%;
+    --sidebar-accent-foreground: 221 65% 4%;
+    --sidebar-border: 215 20% 88%;
+    --sidebar-ring: 72 75% 45%;
   }
 }
 
@@ -101,64 +110,60 @@
   }
 }
 
-/* Neon glow effects */
-.neon-glow {
-  box-shadow: 0 0 15px rgba(108, 92, 231, 0.3), 0 0 30px rgba(108, 92, 231, 0.1);
+/* Antimetal-style dark hero gradient */
+.bg-hero-gradient {
+  background: linear-gradient(180deg, #030813 0%, #0E1B3D 35%, #1E4AAA 80%, #B8D4F7 100%);
 }
 
-.neon-glow-cyan {
-  box-shadow: 0 0 15px rgba(0, 210, 255, 0.3), 0 0 30px rgba(0, 210, 255, 0.1);
+/* Lime CTA button */
+.btn-lime {
+  background-color: #D4F14B;
+  color: #030813;
+  transition: all 0.2s ease;
+  font-weight: 700;
 }
 
-.neon-text {
-  text-shadow: 0 0 10px rgba(108, 92, 231, 0.5), 0 0 20px rgba(108, 92, 231, 0.3);
+.btn-lime:hover {
+  background-color: #C3E23A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212, 241, 75, 0.35);
 }
 
-.neon-text-cyan {
-  text-shadow: 0 0 10px rgba(0, 210, 255, 0.5), 0 0 20px rgba(0, 210, 255, 0.3);
-}
-
-/* Glass morphism card */
+/* Glass card (used on dark hero sections) */
 .glass-card {
-  background: rgba(18, 18, 42, 0.6);
+  background: rgba(14, 27, 61, 0.6);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(184, 212, 247, 0.12);
 }
 
 .light .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(30, 74, 170, 0.15);
 }
 
-/* Gradient button */
-.btn-gradient {
-  background: linear-gradient(135deg, #6C5CE7, #00D2FF);
-  transition: all 0.3s ease;
+/* Dotted globe background (SVG overlay helper) */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(184, 212, 247, 0.25) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.btn-gradient:hover {
-  background: linear-gradient(135deg, #7B6CF0, #20DCFF);
-  box-shadow: 0 0 20px rgba(108, 92, 231, 0.4);
-  transform: translateY(-1px);
-}
-
-/* Animated background grid */
+/* Subtle grid overlay for sections */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(108, 92, 231, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(108, 92, 231, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(184, 212, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 212, 247, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
-/* Pulse animation */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(108, 92, 231, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(108, 92, 231, 0.6); }
+/* Slow rotation for decorative globes */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.animate-spin-slow {
+  animation: spin-slow 60s linear infinite;
 }
 
 /* Float animation */
@@ -178,12 +183,12 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 25%, rgba(108, 92, 231, 0.1) 50%, transparent 75%);
+  background: linear-gradient(90deg, transparent 25%, rgba(184, 212, 247, 0.1) 50%, transparent 75%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
 
-/* Progress bar animation */
+/* Progress bar */
 @keyframes progress-fill {
   from { width: 0%; }
 }
@@ -202,10 +207,36 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.7);
 }
+
+/* Legacy aliases kept temporarily so older components (Navbar, DownloadPage,
+   SharePage, ExtractPage) keep compiling while we migrate them to the new
+   theme tokens in a follow-up PR.
+   - `.btn-gradient` is inlined (not `@apply btn-lime`) because `btn-lime`
+     is defined outside `@layer`, which makes it unavailable to Tailwind's
+     `@apply` directive.
+   - `.neon-text` stays as text-shadow only; Navbar combines it with
+     `bg-clip-text text-transparent` for gradient text, so we must NOT
+     set `color` here or the gradient breaks. */
+.btn-gradient {
+  background-color: #D4F14B;
+  color: #030813;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.btn-gradient:hover {
+  background-color: #C3E23A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212, 241, 75, 0.35);
+}
+.neon-glow { box-shadow: 0 0 20px rgba(212, 241, 75, 0.25); }
+.neon-glow-cyan { box-shadow: 0 0 20px rgba(184, 212, 247, 0.25); }
+.neon-text { text-shadow: 0 0 10px rgba(212, 241, 75, 0.35); }
+.neon-text-cyan { text-shadow: 0 0 10px rgba(184, 212, 247, 0.35); }
+.animate-pulse-glow { animation: float 3s ease-in-out infinite; }
