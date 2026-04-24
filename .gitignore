@@ -5,3 +5,19 @@ build/
 __pycache__
 dist
 vite.config.ts.timestamp-*
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# runtime artefacts
+logs/
+app/backend/logs/
+uploads/*
+!uploads/.gitkeep
+
+# editor / os
+.DS_Store
+.idea/
+.vscode/

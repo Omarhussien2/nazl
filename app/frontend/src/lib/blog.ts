@@ -191,11 +191,11 @@ function getSiteDomainUrl() {
 }
 
 function getSiteName() {
-  return import.meta.env.VITE_APP_TITLE?.trim() || 'Atoms';
+  return import.meta.env.VITE_APP_TITLE?.trim() || 'نزل';
 }
 
 function getTwitterSiteHandle() {
-  return import.meta.env.VITE_TWITTER_SITE?.trim() || '@atoms';
+  return import.meta.env.VITE_TWITTER_SITE?.trim() || '@nzl_sa';
 }
 
 function getTwitterCreatorHandle() {

@@ -17,11 +17,13 @@ function escapeHtmlAttr(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
-process.env.VITE_APP_TITLE ??= process.env.OVERVIEW_TITLE ?? 'shadcnui';
-process.env.VITE_APP_DESCRIPTION ??= process.env.OVERVIEW_DESCRIPTION ?? 'Atoms Generated Project';
+process.env.VITE_APP_TITLE ??= process.env.OVERVIEW_TITLE ?? 'نزل';
+process.env.VITE_APP_DESCRIPTION ??=
+  process.env.OVERVIEW_DESCRIPTION ??
+  'نزل — نزّل وفرّغ أي رابط من أي منصّة. عربي، مجاني، مفتوح المصدر.';
 process.env.VITE_APP_TITLE = escapeHtmlAttr(process.env.VITE_APP_TITLE);
 process.env.VITE_APP_DESCRIPTION = escapeHtmlAttr(process.env.VITE_APP_DESCRIPTION);
-process.env.VITE_APP_LOGO_URL ??= process.env.OVERVIEW_LOGO_URL ?? 'https://public-frontend-cos.metadl.com/mgx/img/favicon_atoms.ico';
+process.env.VITE_APP_LOGO_URL ??= process.env.OVERVIEW_LOGO_URL ?? '/favicon.svg';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -35,7 +37,7 @@ export default defineConfig(({ command }) => {
       react(),
       atoms(),
       Sitemap({
-        hostname: 'https://atoms.template.com',
+        hostname: process.env.VITE_SITE_URL ?? 'https://nzl.sa',
         lastmod: getSitemapLastmod(),
         readable: true,
         generateRobotsTxt: true,
