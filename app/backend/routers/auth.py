@@ -322,8 +322,12 @@ async def logout():
     For providers that advertise an ``end_session_endpoint`` (e.g. Auth0,
     Keycloak), redirect the client there to terminate the IdP session too.
     For providers that don't (e.g. Google), there is no standard remote
-    logout: the frontend should drop the local token and the client cookie
-    is cleared on the next request.
+    logout: we fall back to the configured frontend origin so the client
+    lands on a real page after clearing its local token.
     """
-    logout_url = await build_logout_url()
+    # ``settings.frontend_url`` is resolved via Settings.__getattr__ so it
+    # raises AttributeError when the env var is unset. getattr + default
+    # ensures the handler never 500s — that's the whole point of the
+    # fallback. The frontend also guards against a falsy redirect_url.
+    logout_url = await build_logout_url() or getattr(settings, "frontend_url", "/")
     return {"redirect_url": logout_url}

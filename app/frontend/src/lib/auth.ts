@@ -53,8 +53,9 @@ class RPApi {
       const response = await this.client.get(
         `${this.getBaseURL()}/api/v1/auth/logout`
       );
-      // The backend will redirect to OIDC provider logout
-      window.location.href = response.data.redirect_url;
+      // Providers like Google have no RP-initiated logout; fall back to '/'
+      // rather than navigating to the literal string 'null'.
+      window.location.href = response.data.redirect_url || '/';
     } catch (error) {
       throw new Error(error.response?.data?.detail || 'Failed to logout');
     }
