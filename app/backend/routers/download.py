@@ -1,7 +1,8 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from services.download_service import fetch_video_info, fetch_audio_url
+from services.photo_service import extract_gallery
 from services.aihub import AIHubService
 from schemas.aihub import TranscribeAudioRequest
 
@@ -18,6 +19,26 @@ class DownloadRequest(BaseModel):
 
 class TranscribeRequest(BaseModel):
     url: str
+
+
+class PhotoRequest(BaseModel):
+    url: str
+    max_items: int = Field(default=50, ge=1, le=500)
+
+
+@router.post("/photos")
+async def fetch_photos(request: PhotoRequest):
+    """Extract direct image URLs from an Instagram/Twitter/Pinterest/etc link."""
+    try:
+        result = await extract_gallery(url=request.url, max_items=request.max_items)
+        return {
+            "success": result.get("success", False),
+            "data": result.get("data"),
+            "error": result.get("error"),
+        }
+    except Exception as e:
+        logger.error(f"Fetch photos error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/fetch")
