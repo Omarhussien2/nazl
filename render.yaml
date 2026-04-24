@@ -1,0 +1,68 @@
+# Render Blueprint — Nuzul backend
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Sign in at https://render.com with your GitHub account.
+#   2. Dashboard → New → Blueprint → select the `nazl` repo → Apply.
+#   3. Populate the env vars marked `sync: false` below in the service's
+#      Environment tab (GROQ_API_KEY, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET,
+#      DATABASE_URL, JWT_SECRET_KEY).
+#   4. Render auto-builds from the repo's Dockerfile; first build ~5-8 min.
+#   5. On success Render prints a URL like https://nazl-api.onrender.com.
+
+services:
+  - type: web
+    name: nazl-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    rootDir: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # --- Secrets (set these in the Render dashboard after Blueprint apply) ---
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OIDC_CLIENT_ID
+        sync: false
+      - key: OIDC_CLIENT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+      # --- Non-secret config ---
+      - key: PORT
+        value: "8000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: APP_NAME
+        value: "Nuzul Backend"
+      - key: OIDC_ISSUER_URL
+        value: https://accounts.google.com
+      - key: OIDC_SCOPE
+        value: openid email profile
+      - key: OIDC_ACCESS_TYPE
+        value: offline
+      - key: OIDC_PROMPT
+        value: consent
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "43200"
+      - key: GROQ_WHISPER_MODEL
+        value: whisper-large-v3
+      - key: GROQ_LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: DAILY_TRANSCRIBE_QUOTA
+        value: "10"
+      - key: MAX_TRANSCRIBE_SECONDS
+        value: "3600"
+      - key: ANONYMOUS_TRANSCRIBE_QUOTA
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+      # FRONTEND_URL / CORS_ORIGINS / PYTHON_BACKEND_URL are set per-deploy
+      # in the Render dashboard once we know the service URLs. See PR body.
