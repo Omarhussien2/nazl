@@ -325,5 +325,9 @@ async def logout():
     logout: we fall back to the configured frontend origin so the client
     lands on a real page after clearing its local token.
     """
-    logout_url = await build_logout_url() or settings.frontend_url
+    # ``settings.frontend_url`` is resolved via Settings.__getattr__ so it
+    # raises AttributeError when the env var is unset. getattr + default
+    # ensures the handler never 500s — that's the whole point of the
+    # fallback. The frontend also guards against a falsy redirect_url.
+    logout_url = await build_logout_url() or getattr(settings, "frontend_url", "/")
     return {"redirect_url": logout_url}
