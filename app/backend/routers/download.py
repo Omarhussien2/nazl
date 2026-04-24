@@ -87,35 +87,34 @@ async def transcribe_video(
         return _error("ما قدرنا نستخرج الصوت من الرابط هذا، جرّب رابط ثاني.")
     audio_url, duration_seconds, source_title = audio_payload
 
+    # Atomically check the daily quota and reserve a slot. Two concurrent
+    # requests from the same user serialise on a per-user advisory lock so
+    # neither can observe a stale count and bypass the limit.
     try:
-        await usage.ensure_can_transcribe(
+        reservation_id = await usage.reserve_transcribe_slot(
             caller.user_id,
             int(duration_seconds) if duration_seconds is not None else None,
             anonymous=caller.is_anonymous,
         )
-    except DurationTooLong as exc:
-        raise exc
-    except QuotaExceeded as exc:
-        raise exc
+    except (DurationTooLong, QuotaExceeded):
+        raise
 
     try:
         service = TranscriptionService()
         result = await service.transcribe_url(audio_url, language=request.language)
     except TranscriptionError as exc:
         logger.warning("Transcription failed for %s: %s", request.url, exc)
+        await usage.refund(reservation_id)
         return _error(str(exc))
     except Exception as exc:  # noqa: BLE001 - we want to never leak internals
         logger.exception("Unexpected transcription error: %s", exc)
+        await usage.refund(reservation_id)
         return _error("صار خطأ غير متوقع أثناء التفريغ، جرّب بعد قليل.")
 
-    # Only meter against the quota *after* a successful transcription — a
-    # failure shouldn't burn one of the user's daily slots.
-    await usage.record(
-        caller.user_id,
-        "transcribe",
-        duration_seconds=int(result.duration_seconds or duration_seconds or 0) or None,
-    )
-    await db.commit()
+    # Refine the stored duration now that Groq reported the exact value.
+    refined = int(result.duration_seconds or duration_seconds or 0) or None
+    if refined is not None:
+        await usage.update_duration(reservation_id, refined)
 
     return {
         "success": True,
