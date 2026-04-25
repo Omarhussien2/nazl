@@ -1,0 +1,9 @@
+{
+  "name": "nazl",
+  "private": true,
+  "packageManager": "pnpm@9.15.1",
+  "scripts": {
+    "build": "pnpm --dir app/frontend run build",
+    "lint": "pnpm --dir app/frontend run lint"
+  }
+}
