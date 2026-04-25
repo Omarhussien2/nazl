@@ -1,11 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "installCommand": "cd app/frontend && pnpm i",
-  "buildCommand": "cd app/frontend && pnpm run build",
+  "framework": "vite",
+  "installCommand": "pnpm --dir app/frontend install --frozen-lockfile",
+  "buildCommand": "pnpm --dir app/frontend run build",
   "outputDirectory": "app/frontend/dist",
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon.svg|robots.txt|sitemap.xml|llms.txt).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
