@@ -1,15 +1,37 @@
-// Runtime configuration
-let runtimeConfig: {
+type RuntimeConfig = {
   API_BASE_URL: string;
-} | null = null;
+};
+
+// Runtime configuration
+let runtimeConfig: RuntimeConfig | null = null;
 
 // Configuration loading state
 let configLoading = true;
 
-// Default fallback configuration
-const defaultConfig = {
-  API_BASE_URL: 'http://127.0.0.1:8000', // Only used if runtime config fails to load
+const isBrowser = typeof window !== 'undefined';
+const isLocalHost =
+  isBrowser &&
+  ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+
+const localConfig: RuntimeConfig = {
+  API_BASE_URL: 'http://127.0.0.1:8000',
 };
+
+const sameOriginConfig: RuntimeConfig = {
+  API_BASE_URL: isBrowser ? window.location.origin : '',
+};
+
+const fallbackConfig = isLocalHost ? localConfig : sameOriginConfig;
+
+function isRuntimeConfig(value: unknown): value is RuntimeConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'API_BASE_URL' in value &&
+    typeof value.API_BASE_URL === 'string' &&
+    value.API_BASE_URL.trim().length > 0
+  );
+}
 
 // Function to load runtime configuration
 export async function loadRuntimeConfig(): Promise<void> {
@@ -21,7 +43,12 @@ export async function loadRuntimeConfig(): Promise<void> {
       const contentType = response.headers.get('content-type');
       // Only parse as JSON if the response is actually JSON
       if (contentType && contentType.includes('application/json')) {
-        runtimeConfig = await response.json();
+        const config = await response.json();
+        if (!isRuntimeConfig(config)) {
+          console.log('Runtime config shape is invalid, skipping');
+          return;
+        }
+        runtimeConfig = config;
         console.log('Runtime config loaded successfully');
       } else {
         console.log(
@@ -49,7 +76,7 @@ export function getConfig() {
   // If config is still loading, return default config to avoid using stale Vite env vars
   if (configLoading) {
     console.log('Config still loading, using default config');
-    return defaultConfig;
+    return fallbackConfig;
   }
 
   // First try runtime config (for Lambda)
@@ -67,9 +94,9 @@ export function getConfig() {
     return viteConfig;
   }
 
-  // Finally fall back to default
+  // Finally fall back to same-origin in production or localhost in dev.
   console.log('Using default config');
-  return defaultConfig;
+  return fallbackConfig;
 }
 
 // Dynamic API_BASE_URL getter - this will always return the current config
