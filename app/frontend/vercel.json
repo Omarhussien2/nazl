@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://nazl-api-670837440646.europe-west1.run.app/api/:path*"
+    }
+  ]
+}
