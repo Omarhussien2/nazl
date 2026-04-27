@@ -1,5 +1,25 @@
-import axios, { AxiosInstance } from 'axios';
-import { getAPIBaseURL } from './config';
+import axios, { AxiosError, AxiosInstance } from 'axios';
+
+const authTokenKey = 'token';
+const manualLogoutKey = 'isLougOutManual';
+
+function getStoredToken() {
+  return window.localStorage.getItem(authTokenKey);
+}
+
+function clearStoredAuth() {
+  window.localStorage.removeItem(authTokenKey);
+  window.localStorage.setItem(manualLogoutKey, 'true');
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (!axios.isAxiosError(error)) {
+    return fallback;
+  }
+
+  const axiosError = error as AxiosError<{ detail?: string }>;
+  return axiosError.response?.data?.detail || fallback;
+}
 
 class RPApi {
   private client: AxiosInstance;
@@ -13,51 +33,47 @@ class RPApi {
     });
   }
 
-  private getBaseURL() {
-    return getAPIBaseURL();
-  }
-
   async getCurrentUser() {
+    const token = getStoredToken();
+    if (!token) {
+      return null;
+    }
+
     try {
       const response = await this.client.get(
-        `${this.getBaseURL()}/api/v1/auth/me`
+        '/api/v1/auth/me',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       return response.data;
     } catch (error) {
-      if (error.response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        clearStoredAuth();
         return null;
       }
-      throw new Error(
-        error.response?.data?.detail || 'Failed to get user info'
-      );
+      throw new Error(getErrorMessage(error, 'Failed to get user info'));
     }
   }
 
   async login() {
-    try {
-      const response = await this.client.get(
-        `${this.getBaseURL()}/api/v1/auth/login`
-      );
-      // The backend will redirect to OIDC provider
-      // SSO will work via cookies automatically
-      window.location.href = response.data.redirect_url;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.detail || 'Failed to initiate login'
-      );
-    }
+    const fromUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const params = new URLSearchParams({ from_url: fromUrl });
+    window.location.href = `/api/v1/auth/login?${params.toString()}`;
   }
 
   async logout() {
     try {
       const response = await this.client.get(
-        `${this.getBaseURL()}/api/v1/auth/logout`
+        '/api/v1/auth/logout'
       );
-      // Providers like Google have no RP-initiated logout; fall back to '/'
-      // rather than navigating to the literal string 'null'.
+      clearStoredAuth();
       window.location.href = response.data.redirect_url || '/';
     } catch (error) {
-      throw new Error(error.response?.data?.detail || 'Failed to logout');
+      clearStoredAuth();
+      throw new Error(getErrorMessage(error, 'Failed to logout'));
     }
   }
 }
