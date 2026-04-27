@@ -4,6 +4,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://nazl-api-670837440646.europe-west1.run.app/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
