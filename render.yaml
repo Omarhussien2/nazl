@@ -30,6 +30,8 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: YTDLP_PROXY_URL
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
 

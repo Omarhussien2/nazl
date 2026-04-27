@@ -82,10 +82,13 @@ async def transcribe_video(
     """
     usage = UsageService(db)
 
-    audio_payload = await _resolve_audio(request.url)
-    if audio_payload is None:
-        return _error("ما قدرنا نستخرج الصوت من الرابط هذا، جرّب رابط ثاني.")
-    audio_url, duration_seconds, source_title = audio_payload
+    audio_url, duration_seconds, source_title, audio_error = await _resolve_audio(
+        request.url
+    )
+    if not audio_url:
+        return _error(
+            audio_error or "ما قدرنا نستخرج الصوت من الرابط هذا، جرّب رابط ثاني."
+        )
 
     # Atomically check the daily quota and reserve a slot. Two concurrent
     # requests from the same user serialise on a per-user advisory lock so
@@ -127,16 +130,18 @@ async def transcribe_video(
     }
 
 
-async def _resolve_audio(url: str) -> Optional[tuple[str, Optional[float], Optional[str]]]:
-    """Return (audio_url, duration_s, title) for a given media URL, or None."""
+async def _resolve_audio(
+    url: str,
+) -> tuple[Optional[str], Optional[float], Optional[str], Optional[str]]:
+    """Return (audio_url, duration_s, title, error) for a given media URL."""
     payload = await fetch_audio_url(url=url)
     if not payload.get("success"):
-        return None
+        return None, None, None, payload.get("error")
     data = payload.get("data") or {}
     audio_url = data.get("url")
     if not audio_url:
-        return None
-    return audio_url, data.get("duration"), data.get("title")
+        return None, None, None, "ما قدرنا نحصل على رابط الصوت"
+    return audio_url, data.get("duration"), data.get("title"), None
 
 
 def _error(message: str) -> dict:
