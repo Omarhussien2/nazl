@@ -1,9 +1,21 @@
 import { useEffect } from 'react';
-import { client } from '../lib/api';
 
 export default function AuthCallback() {
   useEffect(() => {
-    client.auth.login();
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if (!token) {
+      const errorParams = new URLSearchParams({
+        msg: params.get('msg') || 'Missing authentication token',
+      });
+      window.location.replace(`/auth/error?${errorParams.toString()}`);
+      return;
+    }
+
+    window.localStorage.setItem('token', token);
+    window.localStorage.setItem('isLougOutManual', 'false');
+    window.location.replace('/');
   }, []);
 
   return (
