@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Optional
 import yt_dlp
 
 logger = logging.getLogger(__name__)
@@ -70,7 +69,6 @@ def _extract_video_info_sync(url: str, quality: str = "1080", audio_only: bool =
             height = f.get("height")
             ext = f.get("ext", "")
             vcodec = f.get("vcodec", "none")
-            acodec = f.get("acodec", "none")
             filesize = f.get("filesize")
             tbr = f.get("tbr")
             
