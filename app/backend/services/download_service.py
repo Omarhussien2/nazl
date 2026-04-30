@@ -68,6 +68,43 @@ def _ensure_cookies_file() -> Optional[str]:
         return None
 
 
+def _detect_js_runtimes() -> dict:
+    """Pick a JavaScript runtime yt-dlp can use to solve YouTube's
+    ``n``-challenge (without it, even cookied requests come back with no
+    streamable URLs — only metadata).
+
+    yt-dlp does NOT auto-enable runtimes; the operator has to opt in via
+    ``--js-runtimes`` on the CLI or this dict in the Python API. We
+    auto-detect the first one that's actually present on ``$PATH`` so the
+    image works whether the operator installed Node, Deno, or Bun.
+
+    Operators can override the choice (and pin a specific binary path)
+    with ``YTDLP_JS_RUNTIMES``, e.g. ``node`` or ``node:/usr/bin/node``
+    or ``node:/usr/bin/node,deno``.
+    """
+    raw = os.getenv("YTDLP_JS_RUNTIMES", "").strip()
+    if raw:
+        result: dict[str, dict] = {}
+        for spec in raw.split(","):
+            spec = spec.strip()
+            if not spec:
+                continue
+            name, _, path = spec.partition(":")
+            result[name.strip().lower()] = (
+                {"path": path.strip()} if path.strip() else {}
+            )
+        return result
+
+    import shutil as _shutil
+
+    runtimes: dict[str, dict] = {}
+    for runtime, binary in (("node", "node"), ("deno", "deno"), ("bun", "bun")):
+        if _shutil.which(binary):
+            runtimes[runtime] = {}
+            break
+    return runtimes
+
+
 def _finalize_opts(opts: dict) -> dict:
     """Decorate a yt-dlp options dict with the runtime knobs we control.
 
@@ -76,6 +113,8 @@ def _finalize_opts(opts: dict) -> dict:
     - ``extractor_args.youtube.player_client`` reorders the YouTube
       player clients yt-dlp uses, dodging anti-bot guards on datacenter
       IPs even without cookies.
+    - ``js_runtimes`` enables a JavaScript runtime so yt-dlp can solve
+      YouTube's n-challenge and return real format URLs.
     """
     proxy_url = os.getenv("YTDLP_PROXY_URL", "").strip()
     if proxy_url:
@@ -90,6 +129,12 @@ def _finalize_opts(opts: dict) -> dict:
     youtube_args.setdefault("player_client", _YOUTUBE_PLAYER_CLIENTS)
     extractor_args["youtube"] = youtube_args
     opts["extractor_args"] = extractor_args
+
+    # Only attach js_runtimes when a runtime is actually available so we
+    # don't override the caller's empty default with an empty dict.
+    runtimes = _detect_js_runtimes()
+    if runtimes:
+        opts["js_runtimes"] = runtimes
 
     return opts
 
