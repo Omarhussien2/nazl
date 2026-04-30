@@ -1,19 +1,102 @@
 import asyncio
 import logging
 import os
+import tempfile
+from typing import Optional
+
 import yt_dlp
 
 logger = logging.getLogger(__name__)
 
 
-YOUTUBE_PROXY_ERROR = "يوتيوب طلب تحقق أو تسجيل دخول. جرّب رابط ثاني أو فعّل بروكسي YouTube من إعدادات الخدمة."
+YOUTUBE_PROXY_ERROR = (
+    "يوتيوب طلب تحقق من تسجيل الدخول. "
+    "اضبط YTDLP_COOKIES_TXT بمحتوى cookies.txt (Netscape) أو "
+    "YTDLP_PROXY_URL ببروكسي سكني (Residential) لتجاوز الحجب."
+)
+
+# YouTube player clients yt-dlp should try, in priority order. The default
+# ``web`` client is heavily fingerprinted and routinely blocked on
+# datacenter IPs (Cloud Run, AWS, etc.) with the famous
+# ``Sign in to confirm you're not a bot`` error. The mobile-web and TV
+# clients use simpler endpoints that pass for most public videos without
+# cookies. ``web`` stays at the end as a last-ditch fallback.
+_YOUTUBE_PLAYER_CLIENTS = ["mweb", "tv_simply", "tv", "web"]
+
+# Cached path to the cookies file we wrote from YTDLP_COOKIES_TXT.
+_COOKIES_PATH: Optional[str] = None
 
 
-def _with_proxy(opts: dict) -> dict:
+def _ensure_cookies_file() -> Optional[str]:
+    """Materialise the cookies file from env vars (once per process).
+
+    Operators can ship a Netscape-format ``cookies.txt`` either inline via
+    the ``YTDLP_COOKIES_TXT`` env var (friendliest for ``gcloud run
+    services update --update-env-vars``) or by mounting a file and
+    pointing ``YTDLP_COOKIES_PATH`` at it (friendliest for Secret Manager
+    mounts). The first hit wins; subsequent calls reuse the same path.
+    """
+    global _COOKIES_PATH
+    if _COOKIES_PATH and os.path.exists(_COOKIES_PATH):
+        return _COOKIES_PATH
+
+    # Accept either YTDLP_COOKIES_PATH (preferred, matches yt-dlp docs) or
+    # YTDLP_COOKIES_FILE (the name shipped in our .env.example).
+    explicit_path = (
+        os.getenv("YTDLP_COOKIES_PATH", "").strip()
+        or os.getenv("YTDLP_COOKIES_FILE", "").strip()
+    )
+    if explicit_path and os.path.exists(explicit_path):
+        _COOKIES_PATH = explicit_path
+        return _COOKIES_PATH
+
+    cookies_content = os.getenv("YTDLP_COOKIES_TXT", "")
+    if not cookies_content.strip():
+        return None
+
+    try:
+        fd, path = tempfile.mkstemp(prefix="ytdlp_cookies_", suffix=".txt")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(cookies_content)
+            if not cookies_content.endswith("\n"):
+                fh.write("\n")
+        _COOKIES_PATH = path
+        logger.info("yt-dlp cookies materialised at %s", path)
+        return _COOKIES_PATH
+    except Exception:
+        logger.exception("Failed to write yt-dlp cookies file")
+        return None
+
+
+def _finalize_opts(opts: dict) -> dict:
+    """Decorate a yt-dlp options dict with the runtime knobs we control.
+
+    - ``YTDLP_PROXY_URL`` routes the call through an HTTP(S)/SOCKS proxy.
+    - ``YTDLP_COOKIES_TXT`` / ``YTDLP_COOKIES_PATH`` ship a cookies jar.
+    - ``extractor_args.youtube.player_client`` reorders the YouTube
+      player clients yt-dlp uses, dodging anti-bot guards on datacenter
+      IPs even without cookies.
+    """
     proxy_url = os.getenv("YTDLP_PROXY_URL", "").strip()
     if proxy_url:
         opts["proxy"] = proxy_url
+
+    cookies = _ensure_cookies_file()
+    if cookies:
+        opts["cookiefile"] = cookies
+
+    extractor_args = dict(opts.get("extractor_args") or {})
+    youtube_args = dict(extractor_args.get("youtube") or {})
+    youtube_args.setdefault("player_client", _YOUTUBE_PLAYER_CLIENTS)
+    extractor_args["youtube"] = youtube_args
+    opts["extractor_args"] = extractor_args
+
     return opts
+
+
+# Backwards-compatible alias kept for any callers that still import the
+# old name. New code should call ``_finalize_opts`` directly.
+_with_proxy = _finalize_opts
 
 
 def _build_ydl_opts(quality: str = "1080", audio_only: bool = False) -> dict:
