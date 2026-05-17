@@ -13,14 +13,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # System deps:
 #   - ffmpeg: required by yt-dlp for audio/video post-processing
-#   - ca-certificates/curl: TLS + healthchecks
+#   - ca-certificates/curl/gnupg: TLS + healthchecks + apt key install
 #   - build-essential: some Python wheels need a compiler at install time
+#   - nodejs (>= 20): yt-dlp invokes Node to solve YouTube's JavaScript
+#     "n-challenge" — without a JS runtime, YouTube returns metadata only,
+#     never streamable URLs (yt-dlp logs "n challenge solving failed").
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ffmpeg \
         ca-certificates \
         curl \
+        gnupg \
         build-essential \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

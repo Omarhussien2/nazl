@@ -29,8 +29,9 @@ def test_build_ydl_opts_omits_proxy_when_unset(monkeypatch: pytest.MonkeyPatch) 
     ],
 )
 def test_translate_download_error_explains_youtube_proxy_need(message: str) -> None:
-    assert download_service._translate_download_error(message) == (
-        "يوتيوب طلب تحقق أو تسجيل دخول. جرّب رابط ثاني أو فعّل بروكسي YouTube من إعدادات الخدمة."
+    assert (
+        download_service._translate_download_error(message)
+        == download_service.YOUTUBE_PROXY_ERROR
     )
 
 
